@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for EC2 instance with CodeDeploy and SSM
+  Session Manager using Launch Template
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    Description: EC2 instance type
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
+    Description: Latest Amazon Linux 2023 AMI ID
+
+Resources:
+  EC2LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: MyEC2LaunchTemplate
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref InstanceType
+        SecurityGroupIds:
+          - !GetAtt EC2SecurityGroup.GroupId
+        IamInstanceProfile:
+          Name: !Ref EC2InstanceProfile
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: CodeDeployEC2Instance
+        UserData: !Base64
+          Fn::Sub: |
+            #!/bin/bash
+            yum update -y
+            yum install -y ruby
+            yum install -y aws-cli
+            cd /home/ec2-user
+            wget https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/install
+            chmod +x ./install
+            ./install auto
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2LaunchTemplate
+        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  #  CodeDeployApplication:
+  #    Type: AWS::CodeDeploy::Application
+  #    Properties:
+  #      ApplicationName: MyApplication
+
+  #  CodeDeployDeploymentGroup:
+  #    Type: AWS::CodeDeploy::DeploymentGroup
+  #    Properties:
+  #      ApplicationName: !Ref CodeDeployApplication
+  #      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+  #      DeploymentGroupName: MyDeploymentGroup
+  #      DeploymentConfigName: CodeDeployDefault.OneAtATime
+  #      Ec2TagSet:
+  #        Ec2TagSetList:
+  #          - Ec2TagGroup:
+  #              - Key: Name
+  #                Type: KEY_AND_VALUE
+  #                Value: CodeDeployEC2Instance
+
+  #  CodeDeployServiceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - codedeploy.amazonaws.com
+  #           Action:
+  #             - sts:AssumeRole
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2Role
+
+Outputs:
+  InstanceId:
+    Description: ID of the EC2 instance
+    Value: !Ref EC2Instance
+  LaunchTemplateId:
+    Description: ID of the EC2 Launch Template
+    Value: !Ref EC2LaunchTemplate
+
+#  CodeDeployApplicationName:
+#    Description: Name of the CodeDeploy Application
+#    Value: !Ref CodeDeployApplication
+#  CodeDeployDeploymentGroupName:
+#    Description: Name of the CodeDeploy Deployment Group
+#    Value: !Ref CodeDeployDeploymentGroup
