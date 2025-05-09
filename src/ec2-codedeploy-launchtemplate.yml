@@ -58,39 +58,39 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
-  #  CodeDeployApplication:
-  #    Type: AWS::CodeDeploy::Application
-  #    Properties:
-  #      ApplicationName: MyApplication
+  CodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: MyApplication
 
-  #  CodeDeployDeploymentGroup:
-  #    Type: AWS::CodeDeploy::DeploymentGroup
-  #    Properties:
-  #      ApplicationName: !Ref CodeDeployApplication
-  #      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
-  #      DeploymentGroupName: MyDeploymentGroup
-  #      DeploymentConfigName: CodeDeployDefault.OneAtATime
-  #      Ec2TagSet:
-  #        Ec2TagSetList:
-  #          - Ec2TagGroup:
-  #              - Key: Name
-  #                Type: KEY_AND_VALUE
-  #                Value: CodeDeployEC2Instance
+  CodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployApplication
+      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+      DeploymentGroupName: MyDeploymentGroup
+      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      Ec2TagSet:
+        Ec2TagSetList:
+          - Ec2TagGroup:
+              - Key: Name
+                Type: KEY_AND_VALUE
+                Value: CodeDeployEC2Instance
 
-  #  CodeDeployServiceRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - codedeploy.amazonaws.com
-  #           Action:
-  #             - sts:AssumeRole
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+  CodeDeployServiceRole:
+   Type: AWS::IAM::Role
+   Properties:
+     AssumeRolePolicyDocument:
+       Version: '2012-10-17'
+       Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+               - codedeploy.amazonaws.com
+           Action:
+             - sts:AssumeRole
+     ManagedPolicyArns:
+       - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
 
   EC2Role:
     Type: AWS::IAM::Role
@@ -123,9 +123,9 @@ Outputs:
     Description: ID of the EC2 Launch Template
     Value: !Ref EC2LaunchTemplate
 
-#  CodeDeployApplicationName:
-#    Description: Name of the CodeDeploy Application
-#    Value: !Ref CodeDeployApplication
-#  CodeDeployDeploymentGroupName:
-#    Description: Name of the CodeDeploy Deployment Group
-#    Value: !Ref CodeDeployDeploymentGroup
+  CodeDeployApplicationName:
+    Description: Name of the CodeDeploy Application
+    Value: !Ref CodeDeployApplication
+  CodeDeployDeploymentGroupName:
+    Description: Name of the CodeDeploy Deployment Group
+    Value: !Ref CodeDeployDeploymentGroup
