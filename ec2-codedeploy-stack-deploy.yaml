@@ -1,4 +1,4 @@
-template-file-path: src/ec2-codedeploy-launchtemplate.yaml
+template-file-path: src/ec2-codedeploy-launchtemplate.yml
 
 tags:
     environment: 'dev'
