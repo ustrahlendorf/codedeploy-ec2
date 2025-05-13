@@ -29,7 +29,7 @@ Resources:
           - ResourceType: instance
             Tags:
               - Key: Name
-                Value: CodeDeployEC2Instance
+                Value: CodeDeployDemo
         UserData: !Base64
           Fn::Sub: |
             #!/bin/bash
